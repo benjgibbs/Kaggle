@@ -17,6 +17,21 @@ digitToStr <- Vectorize(function(d)  {
     return (res)
 })
 
+strToDigit <- Vectorize(function(d)  {
+    res <- NA
+    if(d == "zero") res <- 0
+    else if(d == "one") res <- 1
+    else if(d == "two") res <- 2
+    else if(d == "three") res <- 3
+    else if(d == "four") res <- 4
+    else if(d == "five") res <- 5
+    else if(d == "six") res <- 6
+    else if(d == "seven") res <- 7
+    else if(d == "eight") res <- 8
+    else if(d == "nine") res <- 9
+    return (res)
+})
+
 loadTrainingData <-function() {
     digits <- read.csv("~/Code/Git/Kaggle/DigitRecognition/train.csv")
     Classifier <- digitToStr(digits[,"label"])
@@ -62,11 +77,16 @@ checkError <- function(digits,train,predictor) {
 
 digits <- loadTrainingData()
 train <- createTrainingSet(digits, 0.8)
-#predictor <- buildTreePredictor(digits, train)
+predictor <- buildTreePredictor(digits, train)
 #predictor <- buildBoostingPredictor(digits, train)
-predictor <- buildRfPredictor(digits, train)
+#predictor <- buildRfPredictor(digits, train)
 
 checkError(digits,train,predictor)
 
-#test=read.csv("~/Code/Git/Kaggle/DigitRecognition/test.csv")
-#test.predict <- predict(tree.digits, test, type="class")
+test=read.csv("~/Code/Git/Kaggle/DigitRecognition/test.csv")
+test$label = 100
+test.predict <- predict(predictor, test, type="class")
+test.predict.digit <- strToDigit(test.predict)
+head(test.predict.digit)
+
+write.table(test.predict.digit, col.names="ImageId,Label", file="~/Code/Git/Kaggle/DigitRecognition/out.csv", quote=F,row.names=T,sep=",")
