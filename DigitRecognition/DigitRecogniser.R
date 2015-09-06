@@ -2,6 +2,9 @@ library(tree)
 library(randomForest)
 library(gbm)
 
+baseDir <- "C:/Users/Ben/Documents/GitHub/Kaggle/DigitRecognition"
+#baseDir <- "~/Code/Git/Kaggle/DigitRecognition"
+
 digitToStr <- Vectorize(function(d)  {
     res <- "error"
     if(d == 0) res <- "zero"
@@ -33,7 +36,7 @@ strToDigit <- Vectorize(function(d)  {
 })
 
 loadTrainingData <-function() {
-    digits <- read.csv("~/Code/Git/Kaggle/DigitRecognition/train.csv")
+    digits <- read.csv(paste(baseDir,"train.csv", sep="/"))
     Classifier <- digitToStr(digits[,"label"])
     digits <- data.frame(Classifier,digits)
     return (digits)
@@ -56,7 +59,9 @@ buildTreePredictor <- function(digits, train) {
 }
 
 buildRfPredictor <- function(digits, train) {
-    rf1 <- randomForest(Classifier~.-label, data=digits, subset=train,importance=TRUE, mtry=3, nodesize=5)
+  #0.937380952380952 with mtry=3 and nodesize=5
+  #0.95797619047619 with mtry=6 and nodesize=10
+    rf1 <- randomForest(Classifier~.-label, data=digits, subset=train,importance=TRUE, mtry=12, nodesize=20)
     return(rf1)
 }
 
@@ -77,16 +82,17 @@ checkError <- function(digits,train,predictor) {
 
 digits <- loadTrainingData()
 train <- createTrainingSet(digits, 0.8)
-predictor <- buildTreePredictor(digits, train)
+#predictor <- buildTreePredictor(digits, train)
 #predictor <- buildBoostingPredictor(digits, train)
-#predictor <- buildRfPredictor(digits, train)
+predictor <- buildRfPredictor(digits, train)
 
 checkError(digits,train,predictor)
 
-test=read.csv("~/Code/Git/Kaggle/DigitRecognition/test.csv")
+test=read.csv(paste(baseDir,"test.csv", sep="/"))
 test$label = 100
 test.predict <- predict(predictor, test, type="class")
 test.predict.digit <- strToDigit(test.predict)
 head(test.predict.digit)
 
-write.table(test.predict.digit, col.names="ImageId,Label", file="~/Code/Git/Kaggle/DigitRecognition/out.csv", quote=F,row.names=T,sep=",")
+outFile <- paste(baseDir, "out.csv", sep="/")
+write.table(test.predict.digit, col.names="ImageId,Label", file=outFile, quote=F,row.names=T,sep=",")
